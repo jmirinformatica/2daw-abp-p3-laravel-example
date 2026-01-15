@@ -58,7 +58,7 @@ class PostController extends Controller
         
         // Pagination
         $posts = $this->_pagination 
-            ? $collectionQuery->paginate(5)->withQueryString() 
+            ? $collectionQuery->paginate(8)->withQueryString() 
             : $collectionQuery->get();
         
         return view("posts.index", [
