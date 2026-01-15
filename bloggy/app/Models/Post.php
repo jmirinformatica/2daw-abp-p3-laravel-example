@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Post extends Model
 {
@@ -64,4 +65,14 @@ class Post extends Model
         return $this->status_id === Status::PUBLISHED;
     }
 
+    // Computed attributes
+    
+    public function excerpt() : Attribute
+    {
+        return Attribute::make(
+            get: function () {        
+                return substr($this->body, 0, 20) . "...";
+            }
+        );
+    }   
 }
