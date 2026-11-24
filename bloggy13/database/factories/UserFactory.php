@@ -24,6 +24,8 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $imageUrl = "https://picsum.photos/seed/{seed}/300/300";
+
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
@@ -33,6 +35,8 @@ class UserFactory extends Factory
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
             'two_factor_confirmed_at' => null,
+            // Nou camp avatar
+            'avatar' => str_replace("{seed}", fake()->uuid(), $imageUrl),
         ];
     }
 

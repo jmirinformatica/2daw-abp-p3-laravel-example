@@ -16,3 +16,16 @@ Route::get('/language/{locale}', [SiteController::class, 'language'])->name('lan
 
 Route::get('/contact', [SiteController::class, 'contact'])->name('contact.form');
 Route::post('/contact', [SiteController::class, 'sendMail'])->name('contact.send');
+
+Route::resource('posts', PostController::class)
+    ->middleware(['auth']);
+
+Route::controller(PostController::class)->group(function () {
+    Route::get('posts/{post}/delete', 'delete')
+        ->name('posts.delete');
+    Route::get('my-posts', 'myIndex')
+        ->name('posts.myIndex');
+})->middleware(['auth']);
+
+Route::resource('posts.comments', CommentController::class)
+    ->middleware(['auth']);
