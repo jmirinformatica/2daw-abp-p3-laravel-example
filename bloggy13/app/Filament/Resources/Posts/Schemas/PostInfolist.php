@@ -19,8 +19,7 @@ class PostInfolist
                     ]),
                 Section::make()
                     ->schema([
-                        TextEntry::make('author.name')
-                            ->label(__('Author')),
+                        TextEntry::make('author.name'),
                         TextEntry::make('created_at')
                             ->dateTime()
                             ->placeholder('-'),

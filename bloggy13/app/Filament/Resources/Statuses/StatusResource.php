@@ -16,8 +16,12 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
+use LaraZeus\SpatieTranslatable\Resources\Concerns\Translatable;
+
 class StatusResource extends Resource
 {
+    use Translatable;
+    
     protected static ?string $model = Status::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

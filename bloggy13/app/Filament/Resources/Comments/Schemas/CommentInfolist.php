@@ -13,10 +13,8 @@ class CommentInfolist
             ->components([
                 TextEntry::make('comment')
                     ->columnSpanFull(),
-                TextEntry::make('author.name')
-                    ->label(__('Author')),
-                TextEntry::make('post.title')
-                    ->label(__('Post')),
+                TextEntry::make('author.name'),
+                TextEntry::make('post.title'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-'),

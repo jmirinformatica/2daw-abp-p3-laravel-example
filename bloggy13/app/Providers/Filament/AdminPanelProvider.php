@@ -19,10 +19,26 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+use BezhanSalleh\LanguageSwitch\LanguageSwitch;
+use LaraZeus\SpatieTranslatable\SpatieTranslatablePlugin;
+
+use Filament\Forms\Components\Field;
+use Filament\Tables\Columns\Column;
+use Filament\Infolists\Components\Entry;
+use Illuminate\Support\Facades\Lang;
+use Illuminate\Support\Str;
+
 class AdminPanelProvider extends PanelProvider
 {
+    private function __getLocales()
+    {
+        return array_keys(config('app.available_locales', ['en']));
+    }
+
     public function panel(Panel $panel): Panel
     {
+        $locales = $this->__getLocales();
+
         return $panel
             ->default()
             ->id('admin')
@@ -54,6 +70,61 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->plugin(
+                SpatieTranslatablePlugin::make()
+                    ->persist()
+                    ->defaultLocales($locales),
+            );
+    }
+
+    public function boot(): void
+    {
+        $locales = $this->__getLocales();
+
+        LanguageSwitch::configureUsing(function (LanguageSwitch $switch) use ($locales) {
+            $switch->locales($locales);
+        });
+
+        // Sistema dinàmic de traducció d'etiquetes basat en claus
+        
+        foreach ([Field::class, Column::class, Entry::class] as $componentClass) {
+            $componentClass::configureUsing(function ($component): void {
+                $name = $component->getName();
+
+                if (blank($name)) {
+                    return;
+                }
+
+                $component->label(function() use ($name) : string {
+                    $name = strtolower($name);
+                    $segments = explode('.', $name);
+
+                    // 1. Traducció específica: author.name
+                    $key = 'labels.' . $name;
+                    if (Lang::has($key)) {
+                        return __($key);
+                    }
+
+                    // 2. Traducció de l'entitat: author
+                    if (count($segments) > 1) {
+                        $entityKey = 'labels.' . $segments[0];
+
+                        if (Lang::has($entityKey)) {
+                            return __($entityKey);
+                        }
+                    }
+
+                    // 3. Traducció genèrica de l'atribut: name
+                    $attributeKey = 'labels.' . end($segments);
+                    if (Lang::has($attributeKey)) {
+                        return __($attributeKey);
+                    }
+
+                    // 4. Etiqueta automàtica
+                    return Str::headline(end($segments));
+                });
+            });
+        }
     }
 }

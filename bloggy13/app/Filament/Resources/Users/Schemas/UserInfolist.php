@@ -13,7 +13,7 @@ class UserInfolist
     {
         return $schema
             ->components([
-                Section::make(__('Account'))
+                Section::make(__('labels.section.account'))
                     ->schema([
                         TextEntry::make('name'),
                         TextEntry::make('email'),
@@ -24,18 +24,18 @@ class UserInfolist
                             ->dateTime()
                             ->placeholder('-'),                        
                     ])->columns(2),
-                Section::make(__('Avatar'))
+                Section::make(__('labels.section.avatar'))
                     ->schema([
                         ImageEntry::make('avatar')
-                            ->label(__("Picture"))
+                            ->label(__("labels.avatar_img"))
                             ->disk('public')
                             ->circular()
                             ->size(120),
                         TextEntry::make('avatar')
-                            ->label(__("URL"))
+                            ->label(__("labels.avatar_url"))
                             ->copyable(),
                     ])->columns(2),
-                Section::make(__('Security'))
+                Section::make(__('labels.section.security'))
                     ->schema([
                         TextEntry::make('email_verified_at')
                             ->dateTime()
