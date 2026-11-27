@@ -18,7 +18,7 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        if ($request->user()->cannot('viewAny', Post::class)) {
+        if ($request->user()?->cannot('viewAny', Post::class)) {
             abort(403);
         }
         
@@ -37,18 +37,19 @@ class PostController extends Controller
         return $this->_index($request, true);
     }
 
-    private function _index(Request $request, bool $creator = false)
+    private function _index(Request $request, bool $owner = false)
     {
         // Order and count
-        $collectionQuery = Post::withCount('comments')
+        $collectionQuery = Post::with(['author', 'status'])
+            ->withCount('comments')
             ->orderBy('created_at', 'desc');
-        
+
         // Filter?
         if ($search = $request->get('search')) {
             $collectionQuery->where('title', 'like', "%{$search}%");
         }
 
-        if ($creator) {
+        if ($owner) {
             // Show user posts
             $collectionQuery->where('author_id', '=', $request->user()->id);
         } else {
@@ -62,8 +63,9 @@ class PostController extends Controller
             : $collectionQuery->get();
         
         return view("posts.index", [
-            'posts' => $posts,
-            'search' => $search
+            'posts'  => $posts,
+            'search' => $search,
+            'owner'  => $owner
         ]);
     }
 
@@ -116,11 +118,17 @@ class PostController extends Controller
      */
     public function show(Request $request, Post $post)
     {
-        if ($request->user()->cannot('view', $post)) {
-            abort(403);
+        // Els visitants només poden consultar entrades publicades
+        if (!$request->user() && $post->status_id !== Status::PUBLISHED) {
+            abort(404);
         }
 
-        $post->loadCount('comments');
+        if ($request->user()?->cannot('view', $post)) {
+            abort(403);
+        }
+        
+        $post->load(['author', 'status', 'comments.author'])
+            ->loadCount('comments');
 
         return view("posts.show", [
             'post'     => $post,

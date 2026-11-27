@@ -1,84 +1,208 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
-    <head>
-        @include('partials.head')
-    </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.toggle class="lg:hidden mr-2" icon="bars-2" inset="left" />
+<head>
+    @include('partials.head')
+</head>
 
-            <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
+<body class="min-h-screen bg-white dark:bg-zinc-800">
 
-            <flux:navbar class="-mb-px max-lg:hidden">
-                <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Dashboard') }}
-                </flux:navbar.item>
-            </flux:navbar>
+    {{-- Capçalera principal --}}
+    <flux:header container class="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
 
-            <flux:spacer />
+        {{-- Logo / nom de l'aplicació --}}
+        <x-app-logo href="{{ route('posts.index') }}" wire:navigate />
 
-            <flux:navbar class="me-1.5 space-x-0.5 rtl:space-x-reverse py-0!">
-                <flux:tooltip :content="__('Search')" position="bottom">
-                    <flux:navbar.item class="!h-10 [&>div>svg]:size-5" icon="magnifying-glass" href="#" :label="__('Search')" />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Repository')" position="bottom">
+        {{-- Navegació central --}}
+        <flux:navbar class="mx-auto hidden md:flex">
+
+            <flux:navbar.item
+                icon="home"
+                :href="route('posts.index')"
+                :current="request()->routeIs('posts.index', 'posts.show')"
+                wire:navigate
+            >
+                {{ __('navigation.home') }}
+            </flux:navbar.item>
+
+            @auth
+                @can('create', \App\Models\Post::class)
                     <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="folder-git-2"
-                        href="https://github.com/laravel/livewire-starter-kit"
-                        target="_blank"
-                        :label="__('Repository')"
-                    />
-                </flux:tooltip>
-                <flux:tooltip :content="__('Documentation')" position="bottom">
+                        icon="files"
+                        :href="route('posts.myIndex')"
+                        :current="request()->routeIs('posts.myIndex')"
+                        wire:navigate
+                    >
+                        {{ __('navigation.my_posts') }}
+                    </flux:navbar.item>
+
                     <flux:navbar.item
-                        class="h-10 max-lg:hidden [&>div>svg]:size-5"
-                        icon="book-open-text"
-                        href="https://laravel.com/docs/starter-kits#livewire"
-                        target="_blank"
-                        :label="__('Documentation')"
-                    />
-                </flux:tooltip>
-            </flux:navbar>
+                        icon="plus"
+                        :href="route('posts.create')"
+                        :current="request()->routeIs('posts.create')"
+                        wire:navigate
+                    >
+                        {{ __('navigation.new_post') }}
+                    </flux:navbar.item>
+                @endcan
+            @endauth
 
-            <x-desktop-user-menu />
-        </flux:header>
+        </flux:navbar>
 
-        <!-- Mobile Menu -->
-        <flux:sidebar collapsible="mobile" sticky class="lg:hidden border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
-                <flux:sidebar.collapse class="in-data-flux-sidebar-on-desktop:not-in-data-flux-sidebar-collapsed-desktop:-mr-2" />
-            </flux:sidebar.header>
+        <flux:spacer />
 
-            <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')">
-                    <flux:sidebar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
-                        {{ __('Dashboard')  }}
-                    </flux:sidebar.item>
-                </flux:sidebar.group>
-            </flux:sidebar.nav>
+        {{-- Selector d'idioma --}}
+        <div class="me-2">
+            <x-language-switcher />
+        </div>
 
-            <flux:spacer />
+        {{-- Menú d'usuari --}}
+        @guest
 
-            <flux:sidebar.nav>
-                <flux:sidebar.item icon="folder-git-2" href="https://github.com/laravel/livewire-starter-kit" target="_blank">
-                    {{ __('Repository') }}
-                </flux:sidebar.item>
-                <flux:sidebar.item icon="book-open-text" href="https://laravel.com/docs/starter-kits#livewire" target="_blank">
-                    {{ __('Documentation') }}
-                </flux:sidebar.item>
-            </flux:sidebar.nav>
-        </flux:sidebar>
+            <div class="hidden items-center gap-2 sm:flex">
+                <flux:button
+                    href="{{ route('login') }}"
+                    variant="ghost"
+                    size="sm"
+                >
+                    {{ __('navigation.login') }}
+                </flux:button>
+
+                <flux:button
+                    href="{{ route('register') }}"
+                    variant="primary"
+                    size="sm"
+                >
+                    {{ __('navigation.register') }}
+                </flux:button>
+            </div>
+
+        @else
+
+            <flux:dropdown position="bottom" align="end">
+
+                <flux:button variant="ghost" icon:trailing="chevron-down">
+                    {{ __('navigation.hello', ['name' => auth()->user()->name]) }}
+                </flux:button>
+
+                <flux:menu>
+
+                    <flux:menu.item
+                        href="{{ route('profile.edit') }}"
+                        icon="user"
+                        wire:navigate
+                    >
+                        {{ __('navigation.profile') }}
+                    </flux:menu.item>
+
+                    @can('create', \App\Models\Post::class)
+                        <flux:menu.item
+                            href="{{ route('posts.myIndex') }}"
+                            icon="files"
+                            wire:navigate
+                        >
+                            {{ __('navigation.my_posts') }}
+                        </flux:menu.item>
+                    @endcan
+
+                    <flux:menu.separator />
+
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+
+                        <flux:menu.item
+                            as="button"
+                            type="submit"
+                            icon="arrow-right-start-on-rectangle"
+                            class="w-full"
+                        >
+                            {{ __('navigation.logout') }}
+                        </flux:menu.item>
+                    </form>
+
+                </flux:menu>
+
+            </flux:dropdown>
+
+        @endguest
+
+        {{-- Menú mòbil --}}
+        <flux:dropdown position="bottom" align="end" class="md:hidden">
+
+            <flux:button variant="ghost" icon="bars-3" />
+
+            <flux:menu>
+
+                <flux:menu.item
+                    href="{{ route('posts.index') }}"
+                    icon="home"
+                    wire:navigate
+                >
+                    {{ __('navigation.home') }}
+                </flux:menu.item>
+
+                @auth
+                    @can('create', \App\Models\Post::class)
+                        <flux:menu.item
+                            href="{{ route('posts.myIndex') }}"
+                            icon="files"
+                            wire:navigate
+                        >
+                            {{ __('navigation.my_posts') }}
+                        </flux:menu.item>
+
+                        <flux:menu.item
+                            href="{{ route('posts.create') }}"
+                            icon="plus"
+                            wire:navigate
+                        >
+                            {{ __('navigation.new_post') }}
+                        </flux:menu.item>
+                    @endcan
+                @else
+                    <flux:menu.separator />
+
+                    <flux:menu.item href="{{ route('login') }}" icon="log-in">
+                        {{ __('navigation.login') }}
+                    </flux:menu.item>
+
+                    <flux:menu.item href="{{ route('register') }}" icon="user-plus">
+                        {{ __('navigation.register') }}
+                    </flux:menu.item>
+                @endauth
+
+            </flux:menu>
+
+        </flux:dropdown>
+
+    </flux:header>
+
+    {{-- Contingut de la pàgina --}}
+    <flux:main container class="py-8">
+
+        @if (session('success'))
+            <flux:callout variant="success" class="mb-6">
+                {{ session('success') }}
+            </flux:callout>
+        @endif
+
+        @if (session('error'))
+            <flux:callout variant="danger" class="mb-6">
+                {{ session('error') }}
+            </flux:callout>
+        @endif
 
         {{ $slot }}
 
-        @persist('toast')
-            <flux:toast.group>
-                <flux:toast />
-            </flux:toast.group>
-        @endpersist
+    </flux:main>
 
-        @fluxScripts
-    </body>
+    {{-- Notificacions Flux --}}
+    @persist('toast')
+        <flux:toast.group>
+            <flux:toast />
+        </flux:toast.group>
+    @endpersist
+
+    @fluxScripts
+
+</body>
 </html>
